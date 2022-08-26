@@ -39,10 +39,10 @@ namespace Lab_I_EDI_II
             while (true)
             {
                 Opciones();
+                ConsoleKey Exit = new ConsoleKey();
+                Console.WriteLine("Para salir preciona escape");
+                if ((Exit = Console.ReadKey().Key) == ConsoleKey.Escape) break;
             }
-
-            Console.WriteLine("Press any key to exit");
-            Console.ReadKey();
             
             void Opciones()
             {
@@ -95,12 +95,32 @@ namespace Lab_I_EDI_II
                     }
                     while ((consoleKey = Console.ReadKey().Key) != ConsoleKey.Enter);
 
+                    Console.SetCursorPosition(0, 15);
+                    Console.CursorVisible = true;
 
+                    switch (Posicion) 
+                    {
+                        case 9:
+                            IngresarCSV();
+                            break;
+                        case 10:
+                            BusquedaDPI();
+                            break;
+                        case 11:
+                            BusquedaName();
+                            break;
+                        case 12:
+                            Introducir();
+                            break;
+                        case 13:
+                            Eliminar();
+                            break;
+                    }
 
                 }
                 catch (Exception e)
                 {
-
+                    Console.WriteLine(e.Message);
                 }
             }
         }
@@ -142,8 +162,41 @@ namespace Lab_I_EDI_II
                 }
             }
         }
+        static void BusquedaDPI()
+        {
+            Console.WriteLine("---Busqueda por DPI---");
+            Console.Write("DPI: ");
+            string DPI = Console.ReadLine();
 
-        
+        }
+        static void BusquedaName()
+        {
+            Console.WriteLine("---Busqueda por Nombre---");
+            Console.Write("Nombre: ");
+            string Nombre = Console.ReadLine();
+        }
+        static void Introducir()
+        {
+            Console.WriteLine("---Introducir Registro---");
+            Console.Write("DPI: ");
+            string DPI = Console.ReadLine();
+            Console.Write("Nombre: ");
+            string Nombre = Console.ReadLine();
+            Console.Write("Fecha de nacimeinto: ");
+            string BornDate = Console.ReadLine();
+            Console.Write("Direcciton: ");
+            string address = Console.ReadLine();
+            Console.WriteLine("\n---Nuevo Registro a crear---\n{DPI:" + DPI + ", Nombre:" + Nombre + ", Fecha de nacimiento:" + BornDate + ", Direccion:" + address + "}");
+        }
+        static void Eliminar()
+        {
+            Console.WriteLine("---Eliminar Registro---");
+            Console.Write("DPI: ");
+            string DPI = Console.ReadLine();
+            Console.Write("Nombre: ");
+            string Nombre = Console.ReadLine();
+        }
+
 
     }
 }
