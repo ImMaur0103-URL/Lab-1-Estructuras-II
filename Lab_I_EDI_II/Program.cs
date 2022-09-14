@@ -3,12 +3,24 @@ using System.Linq;
 using System.IO;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using BTree;
 
 namespace Lab_I_EDI_II
 {
+    public static class Extensions
+    {
+        public static string Filter(this string str, List<char> charsToRemove)
+        {
+            foreach (char c in charsToRemove)
+            {
+                str = str.Replace(c.ToString(), String.Empty);
+            }
+
+            return str;
+        }
+    }
     class Program
     {
-
 
         static void Main(string[] args)
         {
@@ -26,16 +38,21 @@ namespace Lab_I_EDI_II
             const string opcion1 = "     Cargar CSV     ";
             const string opcion2 = "\n   Buscar por DPI   ";
             const string opcion3 = "\n  Buscar por nombre ";
-            const string opcion4 = "\n Introducir Registro";
+            const string opcion4 = "\n introducir Registro";
             const string opcion5 = "\n  Eliminar Registro ";
 
             const string opciones = opcion1 + opcion2 + opcion3 + opcion4 + opcion5;
-            
+
+            //BTree<int, BaseDatos> Arbol = new BTree<int, BaseDatos>(5); Trabajo en Proceso Futura Actualizacion
+            List<BaseDatos> baseDatos = new List<BaseDatos>();
+            List<string> baseDatosDPI = new List<string>();
+            List<string> baseDatosNombres = new List<string>();
+
             const string Separador = "\n-----------------------------------------------------------------------------------------------------------------------";
 
             Console.WriteLine(Titulo + Separador);
 
-            IngresarCSV();
+            IngresarCSV(ref baseDatos, ref baseDatosDPI, ref baseDatosNombres);//ref Arbol
             while (true)
             {
                 Opciones();
@@ -101,19 +118,19 @@ namespace Lab_I_EDI_II
                     switch (Posicion) 
                     {
                         case 9:
-                            IngresarCSV();
+                            IngresarCSV(ref baseDatos, ref baseDatosDPI, ref baseDatosNombres);//ref Arbol
                             break;
                         case 10:
-                            BusquedaDPI();
+                            BusquedaDPI(ref baseDatos, ref baseDatosDPI, ref baseDatosNombres);
                             break;
                         case 11:
-                            BusquedaName();
+                            BusquedaName(ref baseDatos, ref baseDatosDPI, ref baseDatosNombres);
                             break;
                         case 12:
-                            Introducir();
+                            introducir(ref baseDatos, ref baseDatosDPI, ref baseDatosNombres);
                             break;
                         case 13:
-                            Eliminar();
+                            Eliminar(ref baseDatos, ref baseDatosDPI, ref baseDatosNombres);
                             break;
                     }
 
@@ -125,7 +142,7 @@ namespace Lab_I_EDI_II
             }
         }
 
-        static void IngresarCSV()
+        static void IngresarCSV(ref List<BaseDatos> Lista, ref List<string> ListaD, ref List<string> ListaN)//ref BTree<int, BaseDatos> Arbol
         {
             Console.WriteLine("Suba archivo .csv para continuar");
             string ruta = Console.ReadLine();
@@ -135,14 +152,23 @@ namespace Lab_I_EDI_II
                 try
                 {
                     StreamReader Lector = new StreamReader(ruta);
+                    List<char> charsToRemove = new List<char>() { '"', '{', '}'};
+                    BaseDatos baseDeDatos;
                     string linea;
                     while ((linea = Lector.ReadLine()) != null)
                     {
-                        string linea1 = linea.Split(',')[0];
-                        string linea2 = linea.Split(',')[1];
+                        string linea1 = linea.Split(';')[0];
+                        string linea2 = linea.Split(';')[1];
+                        linea2 = linea2.Filter(charsToRemove);
+                        int key = Convert.ToInt32(Convert.ToInt64(linea2.Split(',')[1].Split(':')[1]) / 5000) + (linea2.Split(',')[1].Split(':')[0].Length * 5000);
                         switch (linea1)
                         {
                             case "INSERT":
+                                baseDeDatos = new BaseDatos(linea2.Split(',')[1].Split(':')[1], linea2.Split(',')[0].Split(':')[1], linea2.Split(',')[3].Split(':')[1], Convert.ToDateTime(linea2.Split(',')[2].Split(':')[1] + ":" + linea2.Split(',')[2].Split(':')[2]));//
+                                Lista.Add(baseDeDatos);
+                                ListaD.Add(baseDeDatos.DPI);
+                                ListaN.Add(baseDeDatos.Nombre);
+                                //Arbol.Insert(key, baseDeDatos);
                                 Console.WriteLine("Registro Cargado");
                                 break;
                             case "DELETE":
@@ -162,22 +188,52 @@ namespace Lab_I_EDI_II
                 }
             }
         }
-        static void BusquedaDPI()
+        static void BusquedaDPI(ref List<BaseDatos> lista, ref List<string> ListaD, ref List<string> ListaN)//ref BTree<int, BaseDatos> bTree
         {
             Console.WriteLine("---Busqueda por DPI---");
             Console.Write("DPI: ");
             string DPI = Console.ReadLine();
+            int posicion = ListaD.IndexOf(DPI);
+            BaseDatos baseDatos = lista.ElementAt(posicion);
+
+            string linea = baseDatos.GET();
+            Console.WriteLine("\n" + linea.Split(",")[0]);
+            Console.WriteLine(linea.Split(",")[1]);
+            Console.WriteLine(linea.Split(",")[2]);
+            Console.WriteLine(linea.Split(",")[3] + "\n");
+
+            //Actualizacion tranajo con Arbol B
+            //int key = Convert.ToInt32(Convert.ToInt64(DPI) / 5000) + (6 * 5000);
+            //BaseDatos baseDatos = bTree.Search(key).Pointer;
 
         }
-        static void BusquedaName()
+        static void BusquedaName(ref List<BaseDatos> lista, ref List<string> ListaD, ref List<string> ListaN)//ref BTree<int, BaseDatos> bTree
         {
             Console.WriteLine("---Busqueda por Nombre---");
             Console.Write("Nombre: ");
             string Nombre = Console.ReadLine();
+            for (int i = 0; i < ListaN.Count; i++)
+            {
+                if(ListaN[i] == Nombre)
+                {
+                    BaseDatos baseDatos = lista.ElementAt(i);
+
+                    Console.WriteLine("\n-----------------------------------------------------------------------------------------------------------------------");
+
+                    string linea = baseDatos.GET();
+                    Console.WriteLine(linea.Split(",")[0]);
+                    Console.WriteLine(linea.Split(",")[1]);
+                    Console.WriteLine(linea.Split(",")[2]);
+                    Console.WriteLine(linea.Split(",")[3]);
+
+
+                    Console.WriteLine("\n-----------------------------------------------------------------------------------------------------------------------");
+                }
+            }
         }
-        static void Introducir()
+        static void introducir(ref List<BaseDatos> lista, ref List<string> ListaD, ref List<string> ListaN)//ref BTree<int, BaseDatos> bTree
         {
-            Console.WriteLine("---Introducir Registro---");
+            Console.WriteLine("---introducir Registro---");
             Console.Write("DPI: ");
             string DPI = Console.ReadLine();
             Console.Write("Nombre: ");
@@ -187,14 +243,32 @@ namespace Lab_I_EDI_II
             Console.Write("Direcciton: ");
             string address = Console.ReadLine();
             Console.WriteLine("\n---Nuevo Registro a crear---\n{DPI:" + DPI + ", Nombre:" + Nombre + ", Fecha de nacimiento:" + BornDate + ", Direccion:" + address + "}");
+
+            BaseDatos baseDeDatos = new BaseDatos(DPI, Nombre, address, Convert.ToDateTime(BornDate));
+            lista.Add(baseDeDatos);
+            ListaD.Add(baseDeDatos.DPI);
+            ListaN.Add(baseDeDatos.Nombre);
+            Console.WriteLine("Registro Cargado");
+
         }
-        static void Eliminar()
+        static void Eliminar(ref List<BaseDatos> lista, ref List<string> ListaD, ref List<string> ListaN)//ref BTree<int, BaseDatos> bTree
         {
             Console.WriteLine("---Eliminar Registro---");
             Console.Write("DPI: ");
             string DPI = Console.ReadLine();
             Console.Write("Nombre: ");
             string Nombre = Console.ReadLine();
+
+            int posicion = ListaD.IndexOf(DPI);
+            BaseDatos baseDatos = lista.ElementAt(posicion);
+
+            string linea = baseDatos.GET();
+            Console.WriteLine("\n" + linea.Split(",")[0]);
+            Console.WriteLine(linea.Split(",")[1]);
+            Console.WriteLine(linea.Split(",")[2]);
+            Console.WriteLine(linea.Split(",")[3] + "\n");
+
+            Console.WriteLine("---Registro Eliminado---");
         }
 
 
